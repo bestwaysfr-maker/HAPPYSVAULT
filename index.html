@@ -14,7 +14,7 @@
 
     <nav>
         <button class="nav-btn active" data-tab="store">Store</button>
-        <button class="nav-btn" data-tab="inventory">inventory</button>
+        <button class="nav-btn" data-tab="inventory">Inventory</button>
         <button class="nav-btn" data-tab="codes">Codes</button>
     </nav>
 
@@ -22,6 +22,37 @@
         <span>✦</span> <span id="credits">500</span>
     </div>
 </header>
+
+<!-- ACCOUNT AREA -->
+<section id="hvAccountPanel" class="account-panel">
+    <h3>Happy's Vault Account</h3>
+
+    <div id="hvLoggedOut">
+        <input id="hvUsername" type="text"
+            placeholder="Username (new accounts)"
+            maxlength="20">
+
+        <input id="hvEmail" type="email"
+            placeholder="Email address">
+
+        <input id="hvPassword" type="password"
+            placeholder="Password">
+
+        <div>
+            <button id="hvSignupButton">Create Account</button>
+            <button id="hvLoginButton">Log In</button>
+        </div>
+
+        <p>Your email and password are private.</p>
+    </div>
+
+    <div id="hvLoggedIn" style="display:none;">
+        <p>Welcome, <span id="hvAccountWelcome"></span>!</p>
+        <button id="hvLogoutButton">Log Out</button>
+    </div>
+
+    <p id="hvAccountMessage"></p>
+</section>
 
 <main>
 
@@ -79,7 +110,7 @@
         </div>
     </section>
 
-    <!-- inventory -->
+    <!-- INVENTORY -->
     <section id="inventory" class="tab">
         <div class="page-heading">
             <p class="eyebrow">YOUR COLLECTION</p>
@@ -148,7 +179,7 @@
         </div>
 
         <h2 id="modalName">Classic Pack</h2>
-        <p id="modalPrice">10 Credits per pack</p>
+        <p id="modalPrice">20 Credits per pack</p>
 
         <div class="odds">
             <h3>DROP RATES</h3>
@@ -163,7 +194,7 @@
             <strong id="quantityNumber">1</strong>
         </div>
 
-        <p class="total-cost">Total: <strong id="totalCost">10</strong> Credits</p>
+        <p class="total-cost">Total: <strong id="totalCost">20</strong> Credits</p>
 
         <button id="openPackBtn" class="open-btn" onclick="openPacks()">OPEN PACKS</button>
         <p id="packMessage" class="code-message"></p>
@@ -181,6 +212,11 @@
     </div>
 </div>
 
+<!-- SUPABASE LIBRARY: MUST LOAD BEFORE SCRIPT.JS -->
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+
+<!-- GAME SCRIPT -->
 <script src="script.js"></script>
+
 </body>
 </html>

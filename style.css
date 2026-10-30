@@ -80,6 +80,86 @@ nav {
     margin-right: 5px;
 }
 
+/* ACCOUNT PANEL */
+
+.account-panel {
+    max-width: 520px;
+    margin: 25px auto 0;
+    padding: 25px;
+    background: #111827;
+    border: 1px solid #39445a;
+    border-radius: 14px;
+    text-align: center;
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.25);
+}
+
+.account-panel h3 {
+    color: #f5d16c;
+    font-size: 19px;
+    font-weight: 900;
+    margin-bottom: 18px;
+}
+
+.account-panel input {
+    width: 100%;
+    display: block;
+    background: #080d18;
+    border: 1px solid #35415a;
+    color: white;
+    padding: 13px;
+    border-radius: 8px;
+    outline: none;
+    margin-bottom: 12px;
+    font-family: inherit;
+    font-size: 13px;
+}
+
+.account-panel input:focus {
+    border-color: #e9bd59;
+    box-shadow: 0 0 0 2px rgba(233, 189, 89, 0.12);
+}
+
+.account-panel input::placeholder {
+    color: #8490a5;
+}
+
+.account-panel button {
+    background: linear-gradient(135deg, #f5d16c, #bd8731);
+    color: #17120a;
+    border: none;
+    border-radius: 8px;
+    padding: 12px 18px;
+    margin: 5px;
+    font-weight: 900;
+    font-size: 12px;
+    transition: 0.2s;
+}
+
+.account-panel button:hover {
+    filter: brightness(1.15);
+    transform: translateY(-2px);
+}
+
+.account-panel p {
+    color: #929eb3;
+    font-size: 12px;
+    margin-top: 12px;
+}
+
+#hvAccountMessage {
+    min-height: 18px;
+    color: #f5d16c;
+}
+
+#hvLoggedIn {
+    padding: 10px 0;
+}
+
+#hvAccountWelcome {
+    color: #f5d16c;
+    font-weight: 800;
+}
+
 /* PAGE SECTIONS */
 
 main {
@@ -885,5 +965,15 @@ main {
 
     .code-box {
         padding: 25px 18px;
+    }
+
+    .account-panel {
+        margin: 20px 15px 0;
+        padding: 20px;
+    }
+
+    .account-panel button {
+        width: 100%;
+        margin: 5px 0;
     }
 }

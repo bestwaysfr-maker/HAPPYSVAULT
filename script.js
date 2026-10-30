@@ -3,7 +3,22 @@
 // HAPPY'S VAULT
 // ==========================================
 
+// SUPABASE CONNECTION
+const SUPABASE_URL = "https://dkrylupagssmkmelprjn.supabase.co";
+const SUPABASE_PUBLISHABLE_KEY = "sb_publishable_NXa119tDArKOc4LcoD3uSA_fDNPlxve";
+
+const supabaseClient = window.supabase.createClient(
+    SUPABASE_URL,
+    SUPABASE_PUBLISHABLE_KEY
+);
+
+let currentUser = null;
+let cloudReady = false;
+
+// ==========================================
 // PACKS
+// ==========================================
+
 const packs = {
     classic: {
         name: "Classic Pack",
@@ -25,7 +40,6 @@ const packs = {
     }
 };
 
-// PACK AVAILABILITY
 const packUnlocked = {
     classic: true,
     neon: false,
@@ -37,56 +51,16 @@ const packUnlocked = {
 // ==========================================
 
 const pokemonCards = [
-    {
-        name: "Clive",
-        number: "150/129",
-        image: "https://img.simplifiedtcg.com/cards/zh/14807.webp"
-    },
-    {
-        name: "Tatsugiri ex",
-        number: "229/208",
-        image: "https://cdn.shopify.com/s/files/1/0919/6650/5335/files/CSV9C-Stellar-Crystal-Simplified-Chinese-Pokemon-Set-List-Card-Armoury-UK-229.webp?v=1790967873"
-    },
-    {
-        name: "Dondozo ex",
-        number: "235/222",
-        image: "https://static.tcgcollector.com/content/images/ec/11/33/ec11334a99f780c5cb7492c84aed08ad2dcbe2da6404cd4392fe3cfc07eab4ae.webp"
-    },
-    {
-        name: "Dancer",
-        number: "152/132",
-        image: "https://i.ebayimg.com/images/g/-6wAAOSw1vVmHjFD/s-l1200.jpg"
-    },
-    {
-        name: "Luxray",
-        number: "069/066",
-        image: "https://i.ebayimg.com/images/g/DfoAAOSwLpZmz7Au/s-l1200.png"
-    },
-    {
-        name: "Oranguru",
-        number: "008/008",
-        image: "https://static.tcgcollector.com/content/images/22/61/dc/2261dc86b523cd8dd95d924110fa1ea5fbb177a26576f66da400fc3b16ce71c4.webp"
-    },
-    {
-        name: "Tapu Koko V",
-        number: "133/125",
-        image: "https://i.ebayimg.com/thumbs/images/g/U78AAeSwcbNoo~tH/s-l500.jpg"
-    },
-    {
-        name: "Scovillain ex",
-        number: "219/208",
-        image: "https://static.tcgcollector.com/content/images/9a/d0/77/9ad0776dbc30e78b7a86560f5d9c3ed6a2b5de134f3bf8bfb3bab2fab74d3dee.webp"
-    },
-    {
-        name: "Brute Bonnet",
-        number: "135/128",
-        image: "https://static.tcgcollector.com/content/images/18/c3/e0/18c3e036e0cc111ef609778fe7202540d565056d7dcbae0f3c19c38c407975ac.webp"
-    },
-    {
-        name: "Passimian",
-        number: "125/122",
-        image: "https://static.tcgcollector.com/content/images/e0/e8/2e/e0e82e48805b453984b77819abbdf977bd6d8ae5994f7c7dd3aff616fc7694d4.webp"
-    }
+    { name: "Clive", number: "150/129", image: "https://img.simplifiedtcg.com/cards/zh/14807.webp" },
+    { name: "Tatsugiri ex", number: "229/208", image: "https://cdn.shopify.com/s/files/1/0919/6650/5335/files/CSV9C-Stellar-Crystal-Simplified-Chinese-Pokemon-Set-List-Card-Armoury-UK-229.webp?v=1790967873" },
+    { name: "Dondozo ex", number: "235/222", image: "https://static.tcgcollector.com/content/images/ec/11/33/ec11334a99f780c5cb7492c84aed08ad2dcbe2da6404cd4392fe3cfc07eab4ae.webp" },
+    { name: "Dancer", number: "152/132", image: "https://i.ebayimg.com/images/g/-6wAAOSw1vVmHjFD/s-l1200.jpg" },
+    { name: "Luxray", number: "069/066", image: "https://i.ebayimg.com/images/g/DfoAAOSwLpZmz7Au/s-l1200.png" },
+    { name: "Oranguru", number: "008/008", image: "https://static.tcgcollector.com/content/images/22/61/dc/2261dc86b523cd8dd95d924110fa1ea5fbb177a26576f66da400fc3b16ce71c4.webp" },
+    { name: "Tapu Koko V", number: "133/125", image: "https://i.ebayimg.com/thumbs/images/g/U78AAeSwcbNoo~tH/s-l500.jpg" },
+    { name: "Scovillain ex", number: "219/208", image: "https://static.tcgcollector.com/content/images/9a/d0/77/9ad0776dbc30e78b7a86560f5d9c3ed6a2b5de134f3bf8bfb3bab2fab74d3dee.webp" },
+    { name: "Brute Bonnet", number: "135/128", image: "https://static.tcgcollector.com/content/images/18/c3/e0/18c3e036e0cc111ef609778fe7202540d565056d7dcbae0f3c19c38c407975ac.webp" },
+    { name: "Passimian", number: "125/122", image: "https://static.tcgcollector.com/content/images/e0/e8/2e/e0e82e48805b453984b77819abbdf977bd6d8ae5994f7c7dd3aff616fc7694d4.webp" }
 ];
 
 // ==========================================
@@ -94,57 +68,12 @@ const pokemonCards = [
 // ==========================================
 
 const midCards = [
-    {
-        name: "Forretress",
-        number: "117/052",
-        gradingCompany: "CHINESE COMPANY",
-        grade: "10",
-        rarity: "Mid",
-        image: "https://static.tcgcollector.com/content/images/85/8a/83/858a83fdbef7d37dfcf079c7b9c1eb7d2c0ab5b572a666d47ca002eaaff40b13.webp"
-    },
-    {
-        name: "Grimer",
-        number: "151",
-        gradingCompany: "CGC",
-        grade: "PRISTINE 10",
-        cert: "1401032381050",
-        rarity: "Mid",
-        image: "https://i.ebayimg.com/images/g/HG8AAOSw5sJlNvEB/s-l1600.jpg"
-    },
-    {
-        name: "Popplio",
-        number: "",
-        gradingCompany: "PSA",
-        grade: "9",
-        cert: "85157935",
-        rarity: "Mid",
-        image: "https://i.ebayimg.com/images/g/rxoAAeSw5ZZp2Cyv/s-l1600.webp"
-    },
-    {
-        name: "Adventurer's Discovery",
-        number: "TG23",
-        gradingCompany: "PSA",
-        grade: "9",
-        cert: "72052968",
-        rarity: "Mid",
-        image: "https://i.ebayimg.com/images/g/D18AAOSwKPhjmlRS/s-l1200.jpg"
-    },
-    {
-        name: "Arven's Mabosstiff",
-        number: "081/063",
-        gradingCompany: "CHINESE COMPANY",
-        grade: "10",
-        rarity: "Mid",
-        image: "https://images.pkmnprices.com/cards/17fe17e69c509bec.webp"
-    },
-    {
-        name: "Gengar V",
-        number: "072/137",
-        gradingCompany: "CHINESE COMPANY",
-        grade: "10",
-        rarity: "Mid",
-        image: "https://i.ebayimg.com/images/g/CUsAAeSwLCZo5D3A/s-l500.jpg"
-    }
+    { name: "Forretress", number: "117/052", gradingCompany: "CHINESE COMPANY", grade: "10", rarity: "Mid", image: "https://static.tcgcollector.com/content/images/85/8a/83/858a83fdbef7d37dfcf079c7b9c1eb7d2c0ab5b572a666d47ca002eaaff40b13.webp" },
+    { name: "Grimer", number: "151", gradingCompany: "CGC", grade: "PRISTINE 10", cert: "1401032381050", rarity: "Mid", image: "https://i.ebayimg.com/images/g/HG8AAOSw5sJlNvEB/s-l1600.jpg" },
+    { name: "Popplio", number: "", gradingCompany: "PSA", grade: "9", cert: "85157935", rarity: "Mid", image: "https://i.ebayimg.com/images/g/rxoAAeSw5ZZp2Cyv/s-l1600.webp" },
+    { name: "Adventurer's Discovery", number: "TG23", gradingCompany: "PSA", grade: "9", cert: "72052968", rarity: "Mid", image: "https://i.ebayimg.com/images/g/D18AAOSwKPhjmlRS/s-l1200.jpg" },
+    { name: "Arven's Mabosstiff", number: "081/063", gradingCompany: "CHINESE COMPANY", grade: "10", rarity: "Mid", image: "https://images.pkmnprices.com/cards/17fe17e69c509bec.webp" },
+    { name: "Gengar V", number: "072/137", gradingCompany: "CHINESE COMPANY", grade: "10", rarity: "Mid", image: "https://i.ebayimg.com/images/g/CUsAAeSwLCZo5D3A/s-l500.jpg" }
 ];
 
 // ==========================================
@@ -152,22 +81,8 @@ const midCards = [
 // ==========================================
 
 const eliteCards = [
-    {
-        name: "Blastoise ex",
-        number: "009/165",
-        gradingCompany: "CGC",
-        grade: "PRISTINE 10",
-        rarity: "Elite",
-        image: "https://i.ebayimg.com/thumbs/images/g/cp4AAeSwkt9puVCK/s-l500.jpg"
-    },
-    {
-        name: "Durant ex",
-        number: "242/208",
-        gradingCompany: "CHINESE COMPANY",
-        grade: "10",
-        rarity: "Elite",
-        image: "https://cdn.shopify.com/s/files/1/0853/4851/6149/files/242_csv9C_krystalkollectz.jpg?v=1778736498"
-    }
+    { name: "Blastoise ex", number: "009/165", gradingCompany: "CGC", grade: "PRISTINE 10", rarity: "Elite", image: "https://i.ebayimg.com/thumbs/images/g/cp4AAeSwkt9puVCK/s-l500.jpg" },
+    { name: "Durant ex", number: "242/208", gradingCompany: "CHINESE COMPANY", grade: "10", rarity: "Elite", image: "https://cdn.shopify.com/s/files/1/0853/4851/6149/files/242_csv9C_krystalkollectz.jpg?v=1778736498" }
 ];
 
 // ==========================================
@@ -185,9 +100,7 @@ function loadArray(key) {
 
 let credits = Number(localStorage.getItem("hvCredits"));
 
-if (!Number.isFinite(credits) || credits < 0) {
-    credits = 500;
-}
+if (!Number.isFinite(credits) || credits < 0) credits = 500;
 
 let collection = loadArray("hvCollection");
 let redeemedCodes = loadArray("hvRedeemedCodes");
@@ -196,15 +109,12 @@ const ownedPokemon = new Set();
 
 collection = collection.filter(card => {
     if (!card.number || card.rarity !== "Basic") return true;
-
     if (ownedPokemon.has(card.number)) return false;
-
     ownedPokemon.add(card.number);
     return true;
 });
 
 let discoveredPokemon = [...ownedPokemon];
-
 let selectedPack = "classic";
 
 let packQuantities = {
@@ -213,7 +123,6 @@ let packQuantities = {
     galaxy: 1
 };
 
-// PROMO CODES
 const promoCodes = {
     HV100: 100,
     HV200: 200,
@@ -237,11 +146,28 @@ function saveData() {
     localStorage.setItem("hvCollection", JSON.stringify(collection));
     localStorage.setItem("hvRedeemedCodes", JSON.stringify(redeemedCodes));
     localStorage.setItem("hvDiscoveredPokemon", JSON.stringify(discoveredPokemon));
+
+    if (currentUser && cloudReady) {
+        supabaseClient
+            .from("player_progress")
+            .upsert({
+                user_id: currentUser.id,
+                credits,
+                inventory: collection,
+                redeemed_codes: redeemedCodes,
+                updated_at: new Date().toISOString()
+            })
+            .then(({ error }) => {
+                if (error) {
+                    console.error("Cloud save failed:", error.message);
+                    setAccountMessage("Cloud save failed. Your progress is saved on this device.", true);
+                }
+            });
+    }
 }
 
 function updateCredits() {
-    document.getElementById("credits").textContent =
-        credits.toLocaleString();
+    document.getElementById("credits").textContent = credits.toLocaleString();
 }
 
 function updatePrizePool() {
@@ -250,6 +176,240 @@ function updatePrizePool() {
         .map(card => card.number);
 
     saveData();
+}
+
+// ==========================================
+// ACCOUNT PANEL - USE EXISTING HTML
+// ==========================================
+
+function setAccountMessage(message, isError = false) {
+    const element = document.getElementById("hvAccountMessage");
+    if (!element) return;
+
+    element.textContent = message;
+    element.style.color = isError ? "#ff7777" : "#7ee0a0";
+}
+
+function showAccountState(user) {
+    const loggedOut = document.getElementById("hvLoggedOut");
+    const loggedIn = document.getElementById("hvLoggedIn");
+
+    if (!loggedOut || !loggedIn) return;
+
+    if (user) {
+        loggedOut.style.display = "none";
+        loggedIn.style.display = "block";
+
+        const username =
+            user.user_metadata?.username ||
+            user.email?.split("@")[0] ||
+            "Player";
+
+        document.getElementById("hvAccountWelcome").textContent = username;
+    } else {
+        loggedOut.style.display = "block";
+        loggedIn.style.display = "none";
+    }
+}
+
+function connectAccountButtons() {
+    document.getElementById("hvSignupButton")
+        ?.addEventListener("click", signup);
+
+    document.getElementById("hvLoginButton")
+        ?.addEventListener("click", login);
+
+    document.getElementById("hvLogoutButton")
+        ?.addEventListener("click", logout);
+}
+
+// ==========================================
+// SIGN UP
+// ==========================================
+
+async function signup() {
+    const username = document.getElementById("hvUsername").value.trim();
+    const email = document.getElementById("hvEmail").value.trim();
+    const password = document.getElementById("hvPassword").value;
+
+    if (!username || !email || !password) {
+        setAccountMessage("Enter a username, email, and password.", true);
+        return;
+    }
+
+    if (username.length < 3) {
+        setAccountMessage("Your username must be at least 3 characters.", true);
+        return;
+    }
+
+    if (password.length < 8) {
+        setAccountMessage("Your password must be at least 8 characters.", true);
+        return;
+    }
+
+    setAccountMessage("Creating your account...");
+
+    const { data, error } = await supabaseClient.auth.signUp({
+        email,
+        password,
+        options: {
+            data: { username }
+        }
+    });
+
+    if (error) {
+        setAccountMessage(error.message, true);
+        return;
+    }
+
+    if (data.session) {
+        setAccountMessage("Account created! Loading your progress...");
+    } else {
+        setAccountMessage("Account created! Check your email to confirm your account.");
+    }
+}
+
+// ==========================================
+// LOG IN
+// ==========================================
+
+async function login() {
+    const email = document.getElementById("hvEmail").value.trim();
+    const password = document.getElementById("hvPassword").value;
+
+    if (!email || !password) {
+        setAccountMessage("Enter your email and password.", true);
+        return;
+    }
+
+    setAccountMessage("Logging in...");
+
+    const { error } = await supabaseClient.auth.signInWithPassword({
+        email,
+        password
+    });
+
+    if (error) setAccountMessage(error.message, true);
+}
+
+// ==========================================
+// LOG OUT
+// ==========================================
+
+async function logout() {
+    setAccountMessage("Logging out...");
+
+    const { error } = await supabaseClient.auth.signOut();
+
+    if (error) {
+        setAccountMessage(error.message, true);
+        return;
+    }
+
+    currentUser = null;
+    cloudReady = false;
+
+    credits = 500;
+    collection = [];
+    redeemedCodes = [];
+    discoveredPokemon = [];
+
+    localStorage.removeItem("hvCredits");
+    localStorage.removeItem("hvCollection");
+    localStorage.removeItem("hvRedeemedCodes");
+    localStorage.removeItem("hvDiscoveredPokemon");
+
+    updateCredits();
+    renderCollection();
+    showAccountState(null);
+
+    setAccountMessage("You have logged out.");
+}
+
+// ==========================================
+// LOAD PLAYER PROGRESS
+// ==========================================
+
+async function loadCloudProgress(user) {
+    cloudReady = false;
+    currentUser = user;
+
+    if (!user) {
+        showAccountState(null);
+        setAccountMessage("Playing as a guest. Create an account to save progress online.");
+        return;
+    }
+
+    showAccountState(user);
+    setAccountMessage("Loading your saved progress...");
+
+    const { data, error } = await supabaseClient
+        .from("player_progress")
+        .select("*")
+        .eq("user_id", user.id)
+        .maybeSingle();
+
+    if (error) {
+        setAccountMessage("Couldn't load cloud progress: " + error.message, true);
+        return;
+    }
+
+    if (data) {
+        credits = Number(data.credits);
+        if (!Number.isFinite(credits) || credits < 0) credits = 500;
+
+        collection = Array.isArray(data.inventory) ? data.inventory : [];
+        redeemedCodes = Array.isArray(data.redeemed_codes) ? data.redeemed_codes : [];
+
+        const seen = new Set();
+
+        collection = collection.filter(card => {
+            if (!card.number || card.rarity !== "Basic") return true;
+            if (seen.has(card.number)) return false;
+            seen.add(card.number);
+            return true;
+        });
+
+        discoveredPokemon = collection
+            .filter(card => card.rarity === "Basic" && card.number)
+            .map(card => card.number);
+
+        setAccountMessage("Your cloud progress has loaded!");
+    } else {
+        setAccountMessage("Saving your existing progress to your new account...");
+    }
+
+    localStorage.setItem("hvCredits", credits);
+    localStorage.setItem("hvCollection", JSON.stringify(collection));
+    localStorage.setItem("hvRedeemedCodes", JSON.stringify(redeemedCodes));
+    localStorage.setItem("hvDiscoveredPokemon", JSON.stringify(discoveredPokemon));
+
+    cloudReady = true;
+
+    updateCredits();
+    renderCollection();
+    updatePrizePool();
+}
+
+// ==========================================
+// AUTHENTICATION LISTENER
+// ==========================================
+
+function startAuthentication() {
+    connectAccountButtons();
+
+    supabaseClient.auth.onAuthStateChange((event, session) => {
+        if (event === "INITIAL_SESSION" || event === "SIGNED_IN") {
+            loadCloudProgress(session?.user || null);
+        }
+
+        if (event === "SIGNED_OUT") {
+            currentUser = null;
+            cloudReady = false;
+            showAccountState(null);
+            setAccountMessage("You are playing as a guest.");
+        }
+    });
 }
 
 // ==========================================
@@ -287,19 +447,15 @@ function showPack(packType) {
     const art = document.getElementById("modalPackArt");
     art.className = `pack-art modal-pack ${packType}-pack`;
 
-    document.getElementById("modalPackTitle").textContent =
-        packType.toUpperCase();
-
+    document.getElementById("modalPackTitle").textContent = packType.toUpperCase();
     document.getElementById("modalName").textContent = pack.name;
-    document.getElementById("modalPrice").textContent =
-        `${pack.price} Credits per pack`;
+    document.getElementById("modalPrice").textContent = `${pack.price} Credits per pack`;
 
     document.getElementById("basicOdds").textContent = pack.odds.Basic + "%";
     document.getElementById("midOdds").textContent = pack.odds.Mid + "%";
     document.getElementById("eliteOdds").textContent = pack.odds.Elite + "%";
 
-    document.getElementById("packQuantity").value =
-        packQuantities[packType];
+    document.getElementById("packQuantity").value = packQuantities[packType];
 
     updateQuantity();
 
@@ -320,8 +476,7 @@ function closePack() {
     document.getElementById("packModal").classList.remove("show");
 }
 
-document.getElementById("packQuantity")
-    .addEventListener("input", updateQuantity);
+document.getElementById("packQuantity").addEventListener("input", updateQuantity);
 
 function updateQuantity() {
     const quantity = Math.max(
@@ -330,15 +485,13 @@ function updateQuantity() {
     );
 
     document.getElementById("packQuantity").value = quantity;
-
     packQuantities[selectedPack] = quantity;
 
     document.getElementById("quantityNumber").textContent = quantity;
 
     const total = packs[selectedPack].price * quantity;
 
-    document.getElementById("totalCost").textContent =
-        total.toLocaleString();
+    document.getElementById("totalCost").textContent = total.toLocaleString();
 }
 
 // ==========================================
@@ -349,14 +502,13 @@ function generateRarity(pack) {
     const random = Math.random() * 100;
 
     if (random < pack.odds.Elite) return "Elite";
-
     if (random < pack.odds.Elite + pack.odds.Mid) return "Mid";
 
     return "Basic";
 }
 
 // ==========================================
-// AVAILABLE BASIC POKEMON
+// AVAILABLE CARDS
 // ==========================================
 
 function getAvailablePokemon() {
@@ -367,18 +519,11 @@ function getAvailablePokemon() {
     );
 }
 
-// ==========================================
-// AVAILABLE MID CARDS
-// ==========================================
-
 function getAvailableMidCards() {
     return midCards.filter(card =>
         !collection.some(owned =>
             owned.rarity === "Mid" &&
-            (
-                owned.midCardId === card.name ||
-                owned.name === card.name
-            )
+            (owned.midCardId === card.name || owned.name === card.name)
         )
     );
 }
@@ -484,16 +629,11 @@ function createSlab(card) {
                 <strong>${company} ${grade}</strong>
                 ${card.cert ? `<small>CERT ${card.cert}</small>` : ""}
             </div>
-
-            <div class="slab-card">
-                ${artwork}
-            </div>
-
+            <div class="slab-card">${artwork}</div>
             <div class="slab-footer">
                 <span>${card.number || ""}</span>
                 <span>${company} · ${grade}</span>
             </div>
-
             <div class="slab-glare"></div>
         </div>
     `;
@@ -507,10 +647,7 @@ function openPacks() {
     if (!packUnlocked[selectedPack]) {
         document.getElementById("packMessage").textContent =
             "🔒 This pack is currently locked!";
-
-        document.getElementById("packMessage").className =
-            "code-message error";
-
+        document.getElementById("packMessage").className = "code-message error";
         return;
     }
 
@@ -521,10 +658,7 @@ function openPacks() {
     if (credits < totalCost) {
         document.getElementById("packMessage").textContent =
             "You don't have enough credits!";
-
-        document.getElementById("packMessage").className =
-            "code-message error";
-
+        document.getElementById("packMessage").className = "code-message error";
         return;
     }
 
@@ -534,7 +668,6 @@ function openPacks() {
 
     for (let i = 0; i < quantity; i++) {
         const card = createCard(selectedPack);
-
         collection.push(card);
         newCards.push(card);
     }
@@ -553,7 +686,6 @@ function openPacks() {
 
 function showResults(cards) {
     const container = document.getElementById("newCards");
-
     container.innerHTML = "";
 
     cards.forEach(card => {
@@ -562,10 +694,7 @@ function showResults(cards) {
 
         if (
             (card.rarity === "Basic" && card.number) ||
-            (
-                (card.rarity === "Mid" || card.rarity === "Elite") &&
-                card.gradingCompany
-            )
+            ((card.rarity === "Mid" || card.rarity === "Elite") && card.gradingCompany)
         ) {
             cardElement.innerHTML = `
                 ${createSlab(card)}
@@ -602,8 +731,7 @@ function renderCollection() {
 
     container.innerHTML = "";
 
-    document.getElementById("totalCards").textContent =
-        collection.length;
+    document.getElementById("totalCards").textContent = collection.length;
 
     const totalValue = collection.reduce((sum, card) =>
         sum + Number(card.value || 0), 0
@@ -612,21 +740,15 @@ function renderCollection() {
     document.getElementById("collectionValue").textContent =
         totalValue.toLocaleString() + " ✦";
 
-    emptyMessage.style.display =
-        collection.length === 0 ? "block" : "none";
+    emptyMessage.style.display = collection.length === 0 ? "block" : "none";
 
     collection.forEach(card => {
         const element = document.createElement("div");
-
-        element.className =
-            `card-item ${card.rarity.toLowerCase()}-card`;
+        element.className = `card-item ${card.rarity.toLowerCase()}-card`;
 
         if (
             (card.rarity === "Basic" && card.number) ||
-            (
-                (card.rarity === "Mid" || card.rarity === "Elite") &&
-                card.gradingCompany
-            )
+            ((card.rarity === "Mid" || card.rarity === "Elite") && card.gradingCompany)
         ) {
             element.innerHTML = `
                 ${createSlab(card)}
@@ -678,9 +800,7 @@ function sellCard(id) {
 // ==========================================
 
 function sellAllBasic() {
-    const basicCards = collection.filter(card =>
-        card.rarity === "Basic"
-    );
+    const basicCards = collection.filter(card => card.rarity === "Basic");
 
     if (basicCards.length === 0) {
         alert("You don't have any Basic cards to sell!");
@@ -691,20 +811,15 @@ function sellAllBasic() {
         sum + Number(card.value || 0), 0
     );
 
-    collection = collection.filter(card =>
-        card.rarity !== "Basic"
-    );
+    collection = collection.filter(card => card.rarity !== "Basic");
 
     updatePrizePool();
-
     credits += earnings;
 
     updateCredits();
     renderCollection();
 
-    alert(
-        `You sold ${basicCards.length} Basic cards for ${earnings} credits!`
-    );
+    alert(`You sold ${basicCards.length} Basic cards for ${earnings} credits!`);
 }
 
 // ==========================================
@@ -750,7 +865,6 @@ function showCodeMessage(message, success) {
     const element = document.getElementById("codeMessage");
 
     element.textContent = message;
-
     element.className = success
         ? "code-message success"
         : "code-message error";
@@ -763,3 +877,4 @@ function showCodeMessage(message, success) {
 updatePrizePool();
 updateCredits();
 renderCollection();
+startAuthentication();
