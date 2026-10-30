@@ -7,6 +7,10 @@
 const SUPABASE_URL = "https://dkrylupagssmkmelprjn.supabase.co";
 const SUPABASE_PUBLISHABLE_KEY = "sb_publishable_NXa119tDArKOc4LcoD3uSA_fDNPlxve";
 
+if (!window.supabase) {
+    throw new Error("Supabase library did not load. Check index.html.");
+}
+
 const supabaseClient = window.supabase.createClient(
     SUPABASE_URL,
     SUPABASE_PUBLISHABLE_KEY
@@ -14,6 +18,7 @@ const supabaseClient = window.supabase.createClient(
 
 let currentUser = null;
 let cloudReady = false;
+let selectedPack = "classic";
 
 // ==========================================
 // PACKS
@@ -47,7 +52,7 @@ const packUnlocked = {
 };
 
 // ==========================================
-// BASIC POKEMON CARDS
+// BASIC POKEMON
 // ==========================================
 
 const pokemonCards = [
@@ -64,7 +69,7 @@ const pokemonCards = [
 ];
 
 // ==========================================
-// MID GRADED CARDS
+// MID CARDS
 // ==========================================
 
 const midCards = [
@@ -77,7 +82,7 @@ const midCards = [
 ];
 
 // ==========================================
-// ELITE GRADED CARDS
+// ELITE CARDS
 // ==========================================
 
 const eliteCards = [
@@ -86,7 +91,7 @@ const eliteCards = [
 ];
 
 // ==========================================
-// LOAD SAVED DATA
+// SAVED DATA
 // ==========================================
 
 function loadArray(key) {
@@ -99,25 +104,13 @@ function loadArray(key) {
 }
 
 let credits = Number(localStorage.getItem("hvCredits"));
-
 if (!Number.isFinite(credits) || credits < 0) credits = 500;
 
 let collection = loadArray("hvCollection");
 let redeemedCodes = loadArray("hvRedeemedCodes");
 
-const ownedPokemon = new Set();
-
-collection = collection.filter(card => {
-    if (!card.number || card.rarity !== "Basic") return true;
-    if (ownedPokemon.has(card.number)) return false;
-    ownedPokemon.add(card.number);
-    return true;
-});
-
-let discoveredPokemon = [...ownedPokemon];
-let selectedPack = "classic";
-
-let packQuantities = {
+let discoveredPokemon = loadArray("hvDiscoveredPokemon");
+let selectedQuantities = {
     classic: 1,
     neon: 1,
     galaxy: 1
@@ -138,48 +131,7 @@ const promoCodes = {
 };
 
 // ==========================================
-// SAVE DATA
-// ==========================================
-
-function saveData() {
-    localStorage.setItem("hvCredits", credits);
-    localStorage.setItem("hvCollection", JSON.stringify(collection));
-    localStorage.setItem("hvRedeemedCodes", JSON.stringify(redeemedCodes));
-    localStorage.setItem("hvDiscoveredPokemon", JSON.stringify(discoveredPokemon));
-
-    if (currentUser && cloudReady) {
-        supabaseClient
-            .from("player_progress")
-            .upsert({
-                user_id: currentUser.id,
-                credits,
-                inventory: collection,
-                redeemed_codes: redeemedCodes,
-                updated_at: new Date().toISOString()
-            })
-            .then(({ error }) => {
-                if (error) {
-                    console.error("Cloud save failed:", error.message);
-                    setAccountMessage("Cloud save failed. Your progress is saved on this device.", true);
-                }
-            });
-    }
-}
-
-function updateCredits() {
-    document.getElementById("credits").textContent = credits.toLocaleString();
-}
-
-function updatePrizePool() {
-    discoveredPokemon = collection
-        .filter(card => card.rarity === "Basic" && card.number)
-        .map(card => card.number);
-
-    saveData();
-}
-
-// ==========================================
-// ACCOUNT PANEL - USE EXISTING HTML
+// ACCOUNT PANEL
 // ==========================================
 
 function setAccountMessage(message, isError = false) {
@@ -193,22 +145,18 @@ function setAccountMessage(message, isError = false) {
 function showAccountState(user) {
     const loggedOut = document.getElementById("hvLoggedOut");
     const loggedIn = document.getElementById("hvLoggedIn");
+    const welcome = document.getElementById("hvAccountWelcome");
 
     if (!loggedOut || !loggedIn) return;
 
-    if (user) {
-        loggedOut.style.display = "none";
-        loggedIn.style.display = "block";
+    loggedOut.style.display = user ? "none" : "block";
+    loggedIn.style.display = user ? "block" : "none";
 
-        const username =
+    if (user && welcome) {
+        welcome.textContent =
             user.user_metadata?.username ||
             user.email?.split("@")[0] ||
             "Player";
-
-        document.getElementById("hvAccountWelcome").textContent = username;
-    } else {
-        loggedOut.style.display = "block";
-        loggedIn.style.display = "none";
     }
 }
 
@@ -221,6 +169,15 @@ function connectAccountButtons() {
 
     document.getElementById("hvLogoutButton")
         ?.addEventListener("click", logout);
+
+    const panel = document.getElementById("hvAccountPanel");
+    const toggle = document.querySelector(".account-toggle");
+
+    if (panel && toggle) {
+        toggle.addEventListener("click", () => {
+            panel.classList.toggle("account-open");
+        });
+    }
 }
 
 // ==========================================
@@ -228,9 +185,9 @@ function connectAccountButtons() {
 // ==========================================
 
 async function signup() {
-    const username = document.getElementById("hvUsername").value.trim();
-    const email = document.getElementById("hvEmail").value.trim();
-    const password = document.getElementById("hvPassword").value;
+    const username = document.getElementById("hvUsername")?.value.trim();
+    const email = document.getElementById("hvEmail")?.value.trim();
+    const password = document.getElementById("hvPassword")?.value;
 
     if (!username || !email || !password) {
         setAccountMessage("Enter a username, email, and password.", true);
@@ -238,12 +195,12 @@ async function signup() {
     }
 
     if (username.length < 3) {
-        setAccountMessage("Your username must be at least 3 characters.", true);
+        setAccountMessage("Username must be at least 3 characters.", true);
         return;
     }
 
     if (password.length < 8) {
-        setAccountMessage("Your password must be at least 8 characters.", true);
+        setAccountMessage("Password must be at least 8 characters.", true);
         return;
     }
 
@@ -263,9 +220,9 @@ async function signup() {
     }
 
     if (data.session) {
-        setAccountMessage("Account created! Loading your progress...");
+        setAccountMessage("Account created successfully!");
     } else {
-        setAccountMessage("Account created! Check your email to confirm your account.");
+        setAccountMessage("Check your email to confirm your account.");
     }
 }
 
@@ -274,8 +231,8 @@ async function signup() {
 // ==========================================
 
 async function login() {
-    const email = document.getElementById("hvEmail").value.trim();
-    const password = document.getElementById("hvPassword").value;
+    const email = document.getElementById("hvEmail")?.value.trim();
+    const password = document.getElementById("hvPassword")?.value;
 
     if (!email || !password) {
         setAccountMessage("Enter your email and password.", true);
@@ -289,7 +246,9 @@ async function login() {
         password
     });
 
-    if (error) setAccountMessage(error.message, true);
+    if (error) {
+        setAccountMessage(error.message, true);
+    }
 }
 
 // ==========================================
@@ -322,21 +281,65 @@ async function logout() {
     updateCredits();
     renderCollection();
     showAccountState(null);
-
     setAccountMessage("You have logged out.");
 }
 
 // ==========================================
-// LOAD PLAYER PROGRESS
+// CLOUD SAVING
+// ==========================================
+
+function saveData() {
+    localStorage.setItem("hvCredits", credits);
+    localStorage.setItem("hvCollection", JSON.stringify(collection));
+    localStorage.setItem("hvRedeemedCodes", JSON.stringify(redeemedCodes));
+    localStorage.setItem("hvDiscoveredPokemon", JSON.stringify(discoveredPokemon));
+
+    if (!currentUser || !cloudReady) return;
+
+    supabaseClient
+        .from("player_progress")
+        .upsert({
+            user_id: currentUser.id,
+            credits,
+            inventory: collection,
+            redeemed_codes: redeemedCodes,
+            updated_at: new Date().toISOString()
+        })
+        .then(({ error }) => {
+            if (error) {
+                console.error("Cloud save failed:", error.message);
+                setAccountMessage(
+                    "Cloud save failed. Your device still has your progress.",
+                    true
+                );
+            }
+        });
+}
+
+function updatePrizePool() {
+    discoveredPokemon = collection
+        .filter(card => card.rarity === "Basic" && card.number)
+        .map(card => card.number);
+
+    saveData();
+}
+
+function updateCredits() {
+    const element = document.getElementById("credits");
+    if (element) element.textContent = credits.toLocaleString();
+}
+
+// ==========================================
+// LOAD CLOUD PROGRESS
 // ==========================================
 
 async function loadCloudProgress(user) {
-    cloudReady = false;
     currentUser = user;
+    cloudReady = false;
 
     if (!user) {
         showAccountState(null);
-        setAccountMessage("Playing as a guest. Create an account to save progress online.");
+        setAccountMessage("Playing as a guest.");
         return;
     }
 
@@ -350,7 +353,8 @@ async function loadCloudProgress(user) {
         .maybeSingle();
 
     if (error) {
-        setAccountMessage("Couldn't load cloud progress: " + error.message, true);
+        setAccountMessage("Cloud loading error: " + error.message, true);
+        console.error(error);
         return;
     }
 
@@ -359,7 +363,9 @@ async function loadCloudProgress(user) {
         if (!Number.isFinite(credits) || credits < 0) credits = 500;
 
         collection = Array.isArray(data.inventory) ? data.inventory : [];
-        redeemedCodes = Array.isArray(data.redeemed_codes) ? data.redeemed_codes : [];
+        redeemedCodes = Array.isArray(data.redeemed_codes)
+            ? data.redeemed_codes
+            : [];
 
         const seen = new Set();
 
@@ -374,25 +380,19 @@ async function loadCloudProgress(user) {
             .filter(card => card.rarity === "Basic" && card.number)
             .map(card => card.number);
 
-        setAccountMessage("Your cloud progress has loaded!");
+        setAccountMessage("Your cloud progress loaded!");
     } else {
-        setAccountMessage("Saving your existing progress to your new account...");
+        setAccountMessage("New account. Saving your current progress...");
     }
 
-    localStorage.setItem("hvCredits", credits);
-    localStorage.setItem("hvCollection", JSON.stringify(collection));
-    localStorage.setItem("hvRedeemedCodes", JSON.stringify(redeemedCodes));
-    localStorage.setItem("hvDiscoveredPokemon", JSON.stringify(discoveredPokemon));
-
     cloudReady = true;
-
     updateCredits();
     renderCollection();
     updatePrizePool();
 }
 
 // ==========================================
-// AUTHENTICATION LISTENER
+// AUTHENTICATION
 // ==========================================
 
 function startAuthentication() {
@@ -400,7 +400,9 @@ function startAuthentication() {
 
     supabaseClient.auth.onAuthStateChange((event, session) => {
         if (event === "INITIAL_SESSION" || event === "SIGNED_IN") {
-            loadCloudProgress(session?.user || null);
+            setTimeout(() => {
+                loadCloudProgress(session?.user || null);
+            }, 0);
         }
 
         if (event === "SIGNED_OUT") {
@@ -429,7 +431,9 @@ document.querySelectorAll(".nav-btn").forEach(button => {
         );
 
         button.classList.add("active");
-        document.getElementById(tabName).classList.add("active");
+
+        const tab = document.getElementById(tabName);
+        if (tab) tab.classList.add("active");
 
         if (tabName === "inventory") renderCollection();
     });
@@ -440,6 +444,8 @@ document.querySelectorAll(".nav-btn").forEach(button => {
 // ==========================================
 
 function showPack(packType) {
+    if (!packs[packType]) return;
+
     selectedPack = packType;
 
     const pack = packs[packType];
@@ -447,15 +453,24 @@ function showPack(packType) {
     const art = document.getElementById("modalPackArt");
     art.className = `pack-art modal-pack ${packType}-pack`;
 
-    document.getElementById("modalPackTitle").textContent = packType.toUpperCase();
+    document.getElementById("modalPackTitle").textContent =
+        packType.toUpperCase();
+
     document.getElementById("modalName").textContent = pack.name;
-    document.getElementById("modalPrice").textContent = `${pack.price} Credits per pack`;
+    document.getElementById("modalPrice").textContent =
+        `${pack.price} Credits per pack`;
 
-    document.getElementById("basicOdds").textContent = pack.odds.Basic + "%";
-    document.getElementById("midOdds").textContent = pack.odds.Mid + "%";
-    document.getElementById("eliteOdds").textContent = pack.odds.Elite + "%";
+    document.getElementById("basicOdds").textContent =
+        pack.odds.Basic + "%";
 
-    document.getElementById("packQuantity").value = packQuantities[packType];
+    document.getElementById("midOdds").textContent =
+        pack.odds.Mid + "%";
+
+    document.getElementById("eliteOdds").textContent =
+        pack.odds.Elite + "%";
+
+    document.getElementById("packQuantity").value =
+        selectedQuantities[packType];
 
     updateQuantity();
 
@@ -476,7 +491,8 @@ function closePack() {
     document.getElementById("packModal").classList.remove("show");
 }
 
-document.getElementById("packQuantity").addEventListener("input", updateQuantity);
+document.getElementById("packQuantity")
+    .addEventListener("input", updateQuantity);
 
 function updateQuantity() {
     const quantity = Math.max(
@@ -485,17 +501,18 @@ function updateQuantity() {
     );
 
     document.getElementById("packQuantity").value = quantity;
-    packQuantities[selectedPack] = quantity;
+    selectedQuantities[selectedPack] = quantity;
 
     document.getElementById("quantityNumber").textContent = quantity;
 
     const total = packs[selectedPack].price * quantity;
 
-    document.getElementById("totalCost").textContent = total.toLocaleString();
+    document.getElementById("totalCost").textContent =
+        total.toLocaleString();
 }
 
 // ==========================================
-// RARITY GENERATION
+// CARD GENERATION
 // ==========================================
 
 function generateRarity(pack) {
@@ -506,10 +523,6 @@ function generateRarity(pack) {
 
     return "Basic";
 }
-
-// ==========================================
-// AVAILABLE CARDS
-// ==========================================
 
 function getAvailablePokemon() {
     return pokemonCards.filter(card =>
@@ -528,20 +541,16 @@ function getAvailableMidCards() {
     );
 }
 
-// ==========================================
-// CREATE CARD
-// ==========================================
-
 function createCard(packType) {
     const pack = packs[packType];
     let rarity = generateRarity(pack);
 
     if (rarity === "Basic") {
-        const availablePokemon = getAvailablePokemon();
+        const available = getAvailablePokemon();
 
-        if (availablePokemon.length > 0) {
-            const pokemon = availablePokemon[
-                Math.floor(Math.random() * availablePokemon.length)
+        if (available.length) {
+            const pokemon = available[
+                Math.floor(Math.random() * available.length)
             ];
 
             return {
@@ -561,17 +570,17 @@ function createCard(packType) {
     }
 
     if (rarity === "Mid") {
-        const availableMidCards = getAvailableMidCards();
+        const available = getAvailableMidCards();
 
-        if (availableMidCards.length > 0) {
-            const selectedCard = availableMidCards[
-                Math.floor(Math.random() * availableMidCards.length)
+        if (available.length) {
+            const card = available[
+                Math.floor(Math.random() * available.length)
             ];
 
             return {
                 id: Date.now() + Math.random(),
-                ...selectedCard,
-                midCardId: selectedCard.name,
+                ...card,
+                midCardId: card.name,
                 value: pack.values.Mid,
                 pack: packType
             };
@@ -580,32 +589,27 @@ function createCard(packType) {
         rarity = "Elite";
     }
 
-    if (rarity === "Elite") {
-        const selectedCard = eliteCards[
-            Math.floor(Math.random() * eliteCards.length)
-        ];
+    const elite = eliteCards[
+        Math.floor(Math.random() * eliteCards.length)
+    ];
 
-        return {
-            id: Date.now() + Math.random(),
-            ...selectedCard,
-            value: pack.values.Elite,
-            pack: packType
-        };
-    }
+    return {
+        id: Date.now() + Math.random(),
+        ...elite,
+        value: pack.values.Elite,
+        pack: packType
+    };
 }
 
 // ==========================================
-// GRADED SLAB
+// GRADED SLABS
 // ==========================================
 
 function createSlab(card) {
     const artwork = card.image
         ? `
-            <img
-                src="${card.image}"
-                alt="${card.name}"
-                onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';"
-            >
+            <img src="${card.image}" alt="${card.name}"
+                onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';">
             <div class="slab-placeholder" style="display:none">
                 ${card.name}
             </div>
@@ -645,20 +649,20 @@ function createSlab(card) {
 
 function openPacks() {
     if (!packUnlocked[selectedPack]) {
-        document.getElementById("packMessage").textContent =
-            "🔒 This pack is currently locked!";
-        document.getElementById("packMessage").className = "code-message error";
+        const message = document.getElementById("packMessage");
+        message.textContent = "🔒 This pack is currently locked!";
+        message.className = "code-message error";
         return;
     }
 
     const pack = packs[selectedPack];
-    const quantity = packQuantities[selectedPack];
+    const quantity = selectedQuantities[selectedPack];
     const totalCost = pack.price * quantity;
 
     if (credits < totalCost) {
-        document.getElementById("packMessage").textContent =
-            "You don't have enough credits!";
-        document.getElementById("packMessage").className = "code-message error";
+        const message = document.getElementById("packMessage");
+        message.textContent = "You don't have enough credits!";
+        message.className = "code-message error";
         return;
     }
 
@@ -668,20 +672,21 @@ function openPacks() {
 
     for (let i = 0; i < quantity; i++) {
         const card = createCard(selectedPack);
+        if (!card) continue;
+
         collection.push(card);
         newCards.push(card);
     }
 
     updatePrizePool();
     updateCredits();
-
     closePack();
     showResults(newCards);
     renderCollection();
 }
 
 // ==========================================
-// SHOW NEW CARDS
+// RESULTS
 // ==========================================
 
 function showResults(cards) {
@@ -689,29 +694,17 @@ function showResults(cards) {
     container.innerHTML = "";
 
     cards.forEach(card => {
-        const cardElement = document.createElement("div");
-        cardElement.className = "new-card";
+        const element = document.createElement("div");
+        element.className = "new-card";
 
-        if (
-            (card.rarity === "Basic" && card.number) ||
-            ((card.rarity === "Mid" || card.rarity === "Elite") && card.gradingCompany)
-        ) {
-            cardElement.innerHTML = `
-                ${createSlab(card)}
-                <h3>${card.name}</h3>
-                <p>${card.rarity.toUpperCase()} · ${card.number || "SPECIAL CARD"}</p>
-                <p>${card.value} Credits</p>
-            `;
-        } else {
-            cardElement.innerHTML = `
-                <div class="card-art">${card.icon || "⭐"}</div>
-                <h3>${card.name}</h3>
-                <p>${card.rarity}</p>
-                <p>${card.value} Credits</p>
-            `;
-        }
+        element.innerHTML = `
+            ${createSlab(card)}
+            <h3>${card.name}</h3>
+            <p>${card.rarity.toUpperCase()} · ${card.number || "SPECIAL CARD"}</p>
+            <p>${card.value} Credits</p>
+        `;
 
-        container.appendChild(cardElement);
+        container.appendChild(element);
     });
 
     document.getElementById("resultsModal").classList.add("show");
@@ -729,53 +722,43 @@ function renderCollection() {
     const container = document.getElementById("collection");
     const emptyMessage = document.getElementById("emptyMessage");
 
+    if (!container || !emptyMessage) return;
+
     container.innerHTML = "";
 
-    document.getElementById("totalCards").textContent = collection.length;
+    document.getElementById("totalCards").textContent =
+        collection.length;
 
-    const totalValue = collection.reduce((sum, card) =>
-        sum + Number(card.value || 0), 0
+    const totalValue = collection.reduce(
+        (sum, card) => sum + Number(card.value || 0), 0
     );
 
     document.getElementById("collectionValue").textContent =
         totalValue.toLocaleString() + " ✦";
 
-    emptyMessage.style.display = collection.length === 0 ? "block" : "none";
+    emptyMessage.style.display =
+        collection.length === 0 ? "block" : "none";
 
     collection.forEach(card => {
         const element = document.createElement("div");
-        element.className = `card-item ${card.rarity.toLowerCase()}-card`;
+        element.className = `card-item ${(card.rarity || "basic").toLowerCase()}-card`;
 
-        if (
-            (card.rarity === "Basic" && card.number) ||
-            ((card.rarity === "Mid" || card.rarity === "Elite") && card.gradingCompany)
-        ) {
-            element.innerHTML = `
-                ${createSlab(card)}
-                <h3>${card.name}</h3>
-                <p>${card.rarity.toUpperCase()} · ${card.number || "SPECIAL CARD"}</p>
-                <p>${card.value} Credits</p>
-                <button onclick="sellCard('${card.id}')">
-                    SELL FOR ${card.value}
-                </button>
-            `;
-        } else {
-            element.innerHTML = `
-                <div class="card-art">${card.icon || "⭐"}</div>
-                <h3>${card.name}</h3>
-                <p>${card.rarity} · ${card.value} Credits</p>
-                <button onclick="sellCard('${card.id}')">
-                    SELL FOR ${card.value}
-                </button>
-            `;
-        }
+        element.innerHTML = `
+            ${createSlab(card)}
+            <h3>${card.name}</h3>
+            <p>${(card.rarity || "").toUpperCase()} · ${card.number || "SPECIAL CARD"}</p>
+            <p>${card.value} Credits</p>
+            <button onclick="sellCard('${card.id}')">
+                SELL FOR ${card.value}
+            </button>
+        `;
 
         container.appendChild(element);
     });
 }
 
 // ==========================================
-// SELL ONE CARD
+// SELL CARDS
 // ==========================================
 
 function sellCard(id) {
@@ -785,9 +768,9 @@ function sellCard(id) {
 
     if (index === -1) return;
 
-    const soldCard = collection[index];
+    const sold = collection[index];
 
-    credits += Number(soldCard.value || 0);
+    credits += Number(sold.value || 0);
     collection.splice(index, 1);
 
     updatePrizePool();
@@ -795,31 +778,26 @@ function sellCard(id) {
     renderCollection();
 }
 
-// ==========================================
-// SELL ALL BASIC CARDS
-// ==========================================
-
 function sellAllBasic() {
-    const basicCards = collection.filter(card => card.rarity === "Basic");
+    const basic = collection.filter(card => card.rarity === "Basic");
 
-    if (basicCards.length === 0) {
+    if (!basic.length) {
         alert("You don't have any Basic cards to sell!");
         return;
     }
 
-    const earnings = basicCards.reduce((sum, card) =>
-        sum + Number(card.value || 0), 0
+    const earnings = basic.reduce(
+        (sum, card) => sum + Number(card.value || 0), 0
     );
 
     collection = collection.filter(card => card.rarity !== "Basic");
-
-    updatePrizePool();
     credits += earnings;
 
+    updatePrizePool();
     updateCredits();
     renderCollection();
 
-    alert(`You sold ${basicCards.length} Basic cards for ${earnings} credits!`);
+    alert(`You sold ${basic.length} Basic cards for ${earnings} credits!`);
 }
 
 // ==========================================
@@ -863,6 +841,7 @@ function redeemCode() {
 
 function showCodeMessage(message, success) {
     const element = document.getElementById("codeMessage");
+    if (!element) return;
 
     element.textContent = message;
     element.className = success
@@ -874,7 +853,15 @@ function showCodeMessage(message, success) {
 // START WEBSITE
 // ==========================================
 
-updatePrizePool();
-updateCredits();
-renderCollection();
-startAuthentication();
+function startWebsite() {
+    updatePrizePool();
+    updateCredits();
+    renderCollection();
+    startAuthentication();
+}
+
+if (document.readyState === "loading") {
+    document.addEventListener("DOMContentLoaded", startWebsite);
+} else {
+    startWebsite();
+}

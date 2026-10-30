@@ -18,41 +18,46 @@
         <button class="nav-btn" data-tab="codes">Codes</button>
     </nav>
 
-    <div class="credits">
-        <span>✦</span> <span id="credits">500</span>
-    </div>
-</header>
-
-<!-- ACCOUNT AREA -->
-<section id="hvAccountPanel" class="account-panel">
-    <h3>Happy's Vault Account</h3>
-
-    <div id="hvLoggedOut">
-        <input id="hvUsername" type="text"
-            placeholder="Username (new accounts)"
-            maxlength="20">
-
-        <input id="hvEmail" type="email"
-            placeholder="Email address">
-
-        <input id="hvPassword" type="password"
-            placeholder="Password">
-
-        <div>
-            <button id="hvSignupButton">Create Account</button>
-            <button id="hvLoginButton">Log In</button>
+    <div class="header-right">
+        <div class="credits">
+            <span>✦</span> <span id="credits">500</span>
         </div>
 
-        <p>Your email and password are private.</p>
-    </div>
+        <button class="account-toggle" id="accountToggle" type="button">
+            ACCOUNT
+        </button>
 
-    <div id="hvLoggedIn" style="display:none;">
-        <p>Welcome, <span id="hvAccountWelcome"></span>!</p>
-        <button id="hvLogoutButton">Log Out</button>
-    </div>
+        <section id="hvAccountPanel" class="account-panel">
+            <h3>Happy's Vault Account</h3>
 
-    <p id="hvAccountMessage"></p>
-</section>
+            <div id="hvLoggedOut">
+                <input id="hvUsername" type="text"
+                    placeholder="Username (new accounts)"
+                    maxlength="20">
+
+                <input id="hvEmail" type="email"
+                    placeholder="Email address">
+
+                <input id="hvPassword" type="password"
+                    placeholder="Password">
+
+                <div>
+                    <button id="hvSignupButton" type="button">Create Account</button>
+                    <button id="hvLoginButton" type="button">Log In</button>
+                </div>
+
+                <p>Your email and password are private.</p>
+            </div>
+
+            <div id="hvLoggedIn" style="display:none;">
+                <p>Welcome, <span id="hvAccountWelcome"></span>!</p>
+                <button id="hvLogoutButton" type="button">Log Out</button>
+            </div>
+
+            <p id="hvAccountMessage"></p>
+        </section>
+    </div>
+</header>
 
 <main>
 
@@ -67,7 +72,6 @@
         <h2 class="section-title">AVAILABLE PACKS</h2>
 
         <div class="pack-grid">
-
             <article class="pack-card">
                 <div class="pack-art classic-pack">
                     <div class="pack-shine"></div>
@@ -106,7 +110,6 @@
                 <p>150 Credits</p>
                 <button class="open-btn" onclick="showPack('galaxy')">VIEW PACK</button>
             </article>
-
         </div>
     </section>
 
@@ -150,15 +153,11 @@
             <h2>ENTER YOUR CODE</h2>
             <p>Redeem a special Happy's Vault reward.</p>
 
-            <input
-                type="text"
-                id="codeInput"
+            <input type="text" id="codeInput"
                 placeholder="Enter code here..."
-                autocomplete="off"
-            >
+                autocomplete="off">
 
             <button class="open-btn" onclick="redeemCode()">REDEEM CODE</button>
-
             <p id="codeMessage" class="code-message"></p>
         </div>
     </section>
@@ -212,11 +211,14 @@
     </div>
 </div>
 
-<!-- SUPABASE LIBRARY: MUST LOAD BEFORE SCRIPT.JS -->
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-
-<!-- GAME SCRIPT -->
 <script src="script.js"></script>
+
+<script>
+document.getElementById("accountToggle").addEventListener("click", function () {
+    document.getElementById("hvAccountPanel").classList.toggle("account-open");
+});
+</script>
 
 </body>
 </html>
