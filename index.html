@@ -1,0 +1,186 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Happy's Vault</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+<header class="header">
+    <div class="logo">HAPPY'S <span>VAULT</span></div>
+
+    <nav>
+        <button class="nav-btn active" data-tab="store">Store</button>
+        <button class="nav-btn" data-tab="inventory">inventory</button>
+        <button class="nav-btn" data-tab="codes">Codes</button>
+    </nav>
+
+    <div class="credits">
+        <span>✦</span> <span id="credits">500</span>
+    </div>
+</header>
+
+<main>
+
+    <!-- STORE -->
+    <section id="store" class="tab active">
+        <div class="hero">
+            <p class="eyebrow">WELCOME TO</p>
+            <h1>HAPPY'S <span>VAULT</span></h1>
+            <p>Open packs. Discover inventory. Build your collection.</p>
+        </div>
+
+        <h2 class="section-title">AVAILABLE PACKS</h2>
+
+        <div class="pack-grid">
+
+            <article class="pack-card">
+                <div class="pack-art classic-pack">
+                    <div class="pack-shine"></div>
+                    <div class="pack-brand">HAPPY'S VAULT</div>
+                    <div class="pack-title">CLASSIC</div>
+                    <div class="pack-subtitle">COLLECTOR SERIES</div>
+                    <div class="pack-symbol">✦</div>
+                </div>
+                <h3>Classic Pack</h3>
+                <p>20 Credits</p>
+                <button class="open-btn" onclick="showPack('classic')">VIEW PACK</button>
+            </article>
+
+            <article class="pack-card">
+                <div class="pack-art neon-pack">
+                    <div class="pack-shine"></div>
+                    <div class="pack-brand">HAPPY'S VAULT</div>
+                    <div class="pack-title">NEON</div>
+                    <div class="pack-subtitle">ELECTRIC SERIES</div>
+                    <div class="pack-symbol">⚡</div>
+                </div>
+                <h3>Neon Pack</h3>
+                <p>50 Credits</p>
+                <button class="open-btn" onclick="showPack('neon')">VIEW PACK</button>
+            </article>
+
+            <article class="pack-card">
+                <div class="pack-art galaxy-pack">
+                    <div class="pack-shine"></div>
+                    <div class="pack-brand">HAPPY'S VAULT</div>
+                    <div class="pack-title">GALAXY</div>
+                    <div class="pack-subtitle">COSMIC SERIES</div>
+                    <div class="pack-symbol">☄</div>
+                </div>
+                <h3>Galaxy Pack</h3>
+                <p>150 Credits</p>
+                <button class="open-btn" onclick="showPack('galaxy')">VIEW PACK</button>
+            </article>
+
+        </div>
+    </section>
+
+    <!-- inventory -->
+    <section id="inventory" class="tab">
+        <div class="page-heading">
+            <p class="eyebrow">YOUR COLLECTION</p>
+            <h1>MY <span>CARDS</span></h1>
+            <p>Every card you have discovered.</p>
+        </div>
+
+        <div class="stats-grid">
+            <div class="stat-card">
+                <span>Total Cards</span>
+                <strong id="totalCards">0</strong>
+            </div>
+            <div class="stat-card">
+                <span>Collection Value</span>
+                <strong id="collectionValue">0</strong>
+            </div>
+        </div>
+
+        <div class="collection-actions">
+            <button class="secondary-btn" onclick="sellAllBasic()">SELL ALL BASIC</button>
+        </div>
+
+        <div id="collection" class="collection-grid"></div>
+        <p id="emptyMessage" class="empty-message">You haven't collected any cards yet. Open a pack to get started!</p>
+    </section>
+
+    <!-- CODES -->
+    <section id="codes" class="tab">
+        <div class="page-heading">
+            <p class="eyebrow">SPECIAL REWARDS</p>
+            <h1>REDEEM <span>CODES</span></h1>
+            <p>Enter a code to claim free credits.</p>
+        </div>
+
+        <div class="code-box">
+            <div class="code-icon">✦</div>
+            <h2>ENTER YOUR CODE</h2>
+            <p>Redeem a special Happy's Vault reward.</p>
+
+            <input
+                type="text"
+                id="codeInput"
+                placeholder="Enter code here..."
+                autocomplete="off"
+            >
+
+            <button class="open-btn" onclick="redeemCode()">REDEEM CODE</button>
+
+            <p id="codeMessage" class="code-message"></p>
+        </div>
+    </section>
+
+</main>
+
+<!-- PACK POPUP -->
+<div id="packModal" class="modal">
+    <div class="modal-content">
+        <button class="close-btn" onclick="closePack()">✕</button>
+
+        <div id="modalPackArt" class="pack-art modal-pack">
+            <div class="pack-shine"></div>
+            <div class="pack-brand">HAPPY'S VAULT</div>
+            <div id="modalPackTitle" class="pack-title">CLASSIC</div>
+            <div class="pack-subtitle">COLLECTOR SERIES</div>
+            <div class="pack-symbol">✦</div>
+        </div>
+
+        <h2 id="modalName">Classic Pack</h2>
+        <p id="modalPrice">10 Credits per pack</p>
+
+        <div class="odds">
+            <h3>DROP RATES</h3>
+            <p><span class="basic-text">Basic</span> <span id="basicOdds">70%</span></p>
+            <p><span class="mid-text">Mid</span> <span id="midOdds">25%</span></p>
+            <p><span class="elite-text">Elite</span> <span id="eliteOdds">5%</span></p>
+        </div>
+
+        <label for="packQuantity">NUMBER OF PACKS</label>
+        <div class="quantity-row">
+            <input type="range" id="packQuantity" min="1" max="10" value="1">
+            <strong id="quantityNumber">1</strong>
+        </div>
+
+        <p class="total-cost">Total: <strong id="totalCost">10</strong> Credits</p>
+
+        <button id="openPackBtn" class="open-btn" onclick="openPacks()">OPEN PACKS</button>
+        <p id="packMessage" class="code-message"></p>
+    </div>
+</div>
+
+<!-- RESULTS POPUP -->
+<div id="resultsModal" class="modal">
+    <div class="results-content">
+        <button class="close-btn" onclick="closeResults()">✕</button>
+        <p class="eyebrow">PACK OPENED</p>
+        <h2>YOUR <span>CARDS</span></h2>
+        <div id="newCards" class="new-cards-grid"></div>
+        <button class="open-btn" onclick="closeResults()">CONTINUE</button>
+    </div>
+</div>
+
+<script src="script.js"></script>
+</body>
+</html>
